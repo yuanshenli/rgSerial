@@ -87,7 +87,7 @@ void loop() {
 
 void sendToSerial() {
     sendBuffer[0] = 0x7E;
-    Timestamped9Floats data = {
+    Timestamped12Floats data = {
             .time = millis(),
             .data1 = ((float)baseMotor[0].read_position()) * BIT2DEG,
             .data2 = ((float)baseMotor[1].read_position()) * BIT2DEG,
@@ -98,10 +98,13 @@ void sendToSerial() {
             .data7 = Input[3],
             .data8 = Input[4],
             .data9 = Input[5],
+            .data10 = ((float)baseMotor[0].read_current()),
+            .data11 = ((float)baseMotor[1].read_current()),
+            .data12 = ((float)baseMotor[2].read_current()) 
     };
     sb_set_register(sendBuffer, REG_RETURN_POS);
     sb_set_type(sendBuffer, TYPE_STREAM);
-    sb_set_data_Timestamped9Floats(sendBuffer, data);
+    sb_set_data_Timestamped12Floats(sendBuffer, data);
     sb_stuff(sendBuffer);
     uint8_t bufferLen = sb_get_length(sendBuffer);
 //    if (myCounter == 100) {
@@ -180,8 +183,7 @@ void processRecBuffer() {
                 uint16_t motorAddr = regAddr - REG_M1_EN;
                 uint16_t motorID = motorAddr / motorAddrSpace;
                 uint16_t relativeMotorAddr = motorAddr - motorID * motorAddrSpace;
-                if (motorID < 3) processDynamixels(motorID, relativeMotorAddr, recData, recLength, recType);
-                else processMotors(motorID-3, relativeMotorAddr, recData, recLength, recType);
+                processMotors(motorID, relativeMotorAddr, recData, recLength, recType);
             }
     }
 }
@@ -209,8 +211,9 @@ void processMotors(uint16_t motorID, uint16_t relativeMotorAddr, char* data, uin
         {
             char msg_data[1];
             std::copy(data, data + 1, msg_data);
-            bool ifEnable = *(bool*) msg_data; 
-            motor[motorID].Stop(!ifEnable); // Enable pins not connected on motor driver, use this function as stop
+            bool ifEnable = *(bool*) msg_data;
+            if (motorID < 3) baseMotor[motorID].torque_en(ifEnable); // Motor torque on/off
+            else motor[motorID - 3].Stop(!ifEnable); // Enable pins not connected on motor driver, use this function as stop
         }
             break;
         case REG_REL_POS:
@@ -218,7 +221,9 @@ void processMotors(uint16_t motorID, uint16_t relativeMotorAddr, char* data, uin
             char msg_data[8];
             std::copy(data, data + 8, msg_data);
             double rotateDegrees = *(double*)msg_data / 360.0 * motor[motorID].GetTicksPerRev();
-            motor[motorID].SetGoalPos(rotateDegrees);
+            if (motorID < 3) jointInputs[1][motorID] = (int)(rotateDegrees * DEG2BIT);
+            else motor[motorID - 3].SetGoalPos(rotateDegrees);
+
             DEBUG_SERIAL.print("motor ");
             DEBUG_SERIAL.print(motorID);
             DEBUG_SERIAL.print(" setPos : ");
@@ -226,124 +231,67 @@ void processMotors(uint16_t motorID, uint16_t relativeMotorAddr, char* data, uin
         }
             break;
         case REG_REL_CURRENT:
+            if (motorID < 3) {
+                char msg_data[8];
+                std::copy(data, data + 8, msg_data);
+                int currentBit = *(int*)msg_data;
+                jointInputs[0][motorID] = currentBit;
+                DEBUG_SERIAL.print("dynamixel ");
+                DEBUG_SERIAL.print(motorID);
+                DEBUG_SERIAL.print(" set current : ");
+                DEBUG_SERIAL.println(currentBit);
+            } else {
+                printError(relativeMotorAddr,  motorID);
+            }
             break;
         case REG_REL_SPEED:
+            printError(relativeMotorAddr,  motorID);
             break;
         case REG_REL_KP:
-        {
-            char msg_data[8];
-            std::copy(data, data + 8, msg_data);
-            motor[motorID].SetKp(*(double*)msg_data);
+        {   
+            if (motorID < 3) printError(relativeMotorAddr,  motorID);
+            else {
+                char msg_data[8];
+                std::copy(data, data + 8, msg_data);
+                motor[motorID].SetKp(*(double*)msg_data);
+            }
+            
         }
             break;
         case REG_REL_KI:
         {
-            char msg_data[8];
-            std::copy(data, data + 8, msg_data);
-            motor[motorID].SetKi(*(double*)msg_data);
+            if (motorID < 3) printError(relativeMotorAddr,  motorID);
+            else {
+                char msg_data[8];
+                std::copy(data, data + 8, msg_data);
+                motor[motorID].SetKi(*(double*)msg_data);
+            }
         }
             break;
         case REG_REL_KD:
         {
-            char msg_data[8];
-            std::copy(data, data + 8, msg_data);
-            motor[motorID].SetKd(*(double*)msg_data);
+            if (motorID < 3) printError(relativeMotorAddr,  motorID);
+            else {
+                char msg_data[8];
+                std::copy(data, data + 8, msg_data);
+                motor[motorID].SetKd(*(double*)msg_data);
+            }
         }
             break;
         case REG_REL_MOVE:
+            printError(relativeMotorAddr,  motorID);
             break;
-        case REG_REL_STOP:
-        {
-            char msg_data[1];
-            std::copy(data, data + 1, msg_data);
-            bool ifStop = *(bool*) msg_data;
-            motor[motorID].Stop(ifStop);
-            DEBUG_SERIAL.print("motor ");
-            DEBUG_SERIAL.print(motorID);
-            DEBUG_SERIAL.print(" stop : ");
-            DEBUG_SERIAL.println(ifStop);
-        }
-            break;
-        case REG_REL_GOAL:
-            break;
-        case REG_REL_INIT:
-        {
-            char msg_data[32];
-            std::copy(data, data + 32, msg_data);
-            double ticksPerRev = *(double*)(msg_data);
-            double Kp = *(double*) (msg_data + sizeof(double));
-            double Ki = *(double*) (msg_data + 2 * sizeof(double));
-            double Kd = *(double*) (msg_data + 3 * sizeof(double));
-            DEBUG_SERIAL.print("motor ");
-            DEBUG_SERIAL.print(motorID);
-            DEBUG_SERIAL.print(" init : ");
-            DEBUG_SERIAL.print(ticksPerRev);
-            DEBUG_SERIAL.print(", ");
-            DEBUG_SERIAL.print(Kp);
-            DEBUG_SERIAL.print(", ");
-            DEBUG_SERIAL.print(Ki);
-            DEBUG_SERIAL.print(", ");
-            DEBUG_SERIAL.println(Kd);
-            motor[motorID].Init(ticksPerRev, Kp, Ki, Kd);
-        }
-            break;
-        default:
-          DEBUG_SERIAL.println("motor default state.");
-          break;
-    }
-}
-
-void processDynamixels(uint16_t motorID, uint16_t relativeMotorAddr, char* data, uint8_t recLength, SBTypes recType) {
-    switch (relativeMotorAddr) {
-        case REG_REL_EN:
+        case REG_REL_STOP: // Exactly the same as enable
         {
             char msg_data[1];
             std::copy(data, data + 1, msg_data);
             bool ifEnable = *(bool*) msg_data;
-            baseMotor[motorID].torque_en(ifEnable); // Motor torque on/off
+            if (motorID < 3) baseMotor[motorID].torque_en(ifEnable); // Motor torque on/off
+            else motor[motorID - 3].Stop(!ifEnable); // Enable pins not connected on motor driver, use this function as stop
         }
-            break;
-        case REG_REL_POS:
-        {
-            char msg_data[8];
-            std::copy(data, data + 8, msg_data);
-            double rotateDegrees = *(double*)msg_data / 360.0 * motor[motorID].GetTicksPerRev();
-            jointInputs[1][motorID] = (int)(rotateDegrees * DEG2BIT);
-//            baseMotor[motorID].set_goal_position((int)(rotateDegrees * DEG2BIT));
-//            baseMotor[motorID].position_goal();
-            DEBUG_SERIAL.print("dynamixel ");
-            DEBUG_SERIAL.print(motorID);
-            DEBUG_SERIAL.print(" setPos : ");
-            DEBUG_SERIAL.println(rotateDegrees);
-        }
-            break;
-        case REG_REL_CURRENT:
-        {
-            char msg_data[8];
-            std::copy(data, data + 8, msg_data);
-            int currentBit = *(int*)msg_data;
-            jointInputs[0][motorID] = currentBit;
-//            baseMotor[motorID].set_goal_current(currentBit);
-//            baseMotor[motorID].current_goal();
-            DEBUG_SERIAL.print("dynamixel ");
-            DEBUG_SERIAL.print(motorID);
-            DEBUG_SERIAL.print(" set current : ");
-            DEBUG_SERIAL.println(currentBit);
-        }
-            break;
-        case REG_REL_SPEED:
-            break;
-        case REG_REL_KP:
-            break;
-        case REG_REL_KI:
-            break;
-        case REG_REL_KD:
-            break;
-        case REG_REL_MOVE:
-            break;
-        case REG_REL_STOP:
             break;
         case REG_REL_GOAL:
+            printError(relativeMotorAddr,  motorID);
             break;
         case REG_REL_INIT:
         {
@@ -363,11 +311,12 @@ void processDynamixels(uint16_t motorID, uint16_t relativeMotorAddr, char* data,
             DEBUG_SERIAL.print(Ki);
             DEBUG_SERIAL.print(", ");
             DEBUG_SERIAL.println(Kd);
-            baseMotor[motorID].init();
+            if (motorID < 3) baseMotor[motorID].init();
+            else motor[motorID].Init(ticksPerRev, Kp, Ki, Kd);
         }
             break;
         default:
-          DEBUG_SERIAL.println("dynamixel default state.");
+          printError(relativeMotorAddr,  99);
           break;
     }
 }
@@ -409,6 +358,13 @@ void updateDynamixels(bool ifPrint) {
     }
   }
   if (ifPrint) DEBUG_SERIAL.println();
+}
+
+void printError(uint16_t relativeMotorAddr, uint16_t motorID) {
+  DEBUG_SERIAL.print("Error! State: ");
+  DEBUG_SERIAL.print(relativeMotorAddr);
+  DEBUG_SERIAL.print("motorID: ");
+  DEBUG_SERIAL.println(motorID);
 }
 
 void blinkNTimes(uint8_t num) {

@@ -181,6 +181,22 @@ typedef struct {
 } Timestamped9Floats;
 
 typedef struct {
+  uint32_t time;
+  float data1;
+  float data2;
+  float data3;
+  float data4;
+  float data5;
+  float data6;
+  float data7;
+  float data8;
+  float data9;
+  float data10;
+  float data11;
+  float data12;
+} Timestamped12Floats;
+
+typedef struct {
     uint32_t time;
     double data1;
     double data2;
@@ -260,6 +276,11 @@ inline void sb_set_data_Timestamped4Doubles(uint8_t* msg, Timestamped4Doubles da
 inline void sb_set_data_Timestamped9Floats(uint8_t* msg, Timestamped9Floats data) {
     memcpy(&msg[6], &data, sizeof(Timestamped9Floats));
     sb_set_data_length(msg, sizeof(Timestamped9Floats));
+}
+
+inline void sb_set_data_Timestamped12Floats(uint8_t* msg, Timestamped12Floats data) {
+    memcpy(&msg[6], &data, sizeof(Timestamped12Floats));
+    sb_set_data_length(msg, sizeof(Timestamped12Floats));
 }
 
 inline char* sb_get_data_str(uint8_t* msg) {
