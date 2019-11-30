@@ -241,7 +241,7 @@ int SB_Dynamixel::read_current() {
       buffer_idx++;
       if (buffer_idx == IN_BUF_SIZE) {
         buffer_idx = 0;
-        Serial.println("buffer reset");
+        // Serial.println("buffer reset");
       }
     }
   }
@@ -301,7 +301,7 @@ int SB_Dynamixel::read_position() {
       buffer_idx++;
       if (buffer_idx == IN_BUF_SIZE) {
         buffer_idx = 0;
-        Serial.println("buffer reset");
+        // Serial.println("buffer reset");
       }
     }
   }

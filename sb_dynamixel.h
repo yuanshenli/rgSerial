@@ -87,16 +87,16 @@ class SB_Dynamixel
 
 
   private:
-    unsigned char m_device_id;
-    int m_curr_pos;
-    short m_goal_current;
-    int m_goal_position;
+    unsigned char m_device_id = 0;
+    int m_curr_pos = 0;
+    short m_goal_current = 0;
+    int m_goal_position = 0;
 
     unsigned char input_buffer[IN_BUF_SIZE] = {};
-    unsigned int buffer_idx;
+    unsigned int buffer_idx = 0;
 
-    const int end_delay_us; // this is a tiny delay after the Serial flush in order to make sure all data is sent before pulling the half-duplex RX/TX select line low
-    const int wait_micros; // this is a delay after a read function in order to allow the Dynamixel to respond
+    const int end_delay_us = 10; // this is a tiny delay after the Serial flush in order to make sure all data is sent before pulling the half-duplex RX/TX select line low
+    const int wait_micros = 2000; // this is a delay after a read function in order to allow the Dynamixel to respond
 };
 
 

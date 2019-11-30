@@ -139,7 +139,7 @@ typedef enum SBRegisters {
   REG_M9_GOAL  = 0x0098,
   REG_M9_INIT = 0x0099,
 
-  REG_RETURN_POS = 0x00A0,
+  REG_RETURN_VALS = 0x00A0,
 
   REG_MOVE  = 0x00A5,
   REG_NA  = 0xFF00
