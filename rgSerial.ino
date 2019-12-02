@@ -95,10 +95,6 @@ void loop() {
 
 void sendToSerial() {
   sendBuffer[0] = 0x7E;
-  float data1_p = ((float)baseMotor[2].read_position()) * BIT2DEG;
-  DEBUG_SERIAL.println(data1_p);
-  float data1_c = ((float)baseMotor[2].read_current());
-  DEBUG_SERIAL.println(data1_c);
   Timestamped12Floats data = {
     .time = millis(),
     .data1 = ((float)baseMotor[0].read_position()) * BIT2DEG,

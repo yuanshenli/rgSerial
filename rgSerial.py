@@ -22,6 +22,7 @@ class MotorSerial:
 			if teensyPort is None:
 				MotorSerial.ser = serial.Serial(serial_port, baud_rate)
 			else:
+				print("Automatic serial port connection failed, using custom serial port...")
 				MotorSerial.ser = serial.Serial(teensyPort, baud_rate)
 			# MotorSerial.ser.open()
 
@@ -64,7 +65,7 @@ class SBMotor:
 		elif self.motor_rpm == 2737:
 			params = (52.62, 100.0, 0, 0.16)
 		elif self.motor_rpm == 130:
-			params = (3040.7596, 16.0, 0, 0.3)
+			params = (3040.7596, 14.0, 0, 0.3)
 		else:
 			params = ()
 			print("motor not supported")
@@ -222,7 +223,7 @@ class SBMotor:
 						self.recv_buffer = self.msg_unstuff(bytearray(self.recv_buffer))
 
 						unpacked_data = unpack('<BBBBHlffffffffffff', self.recv_buffer)
-						print(unpacked_data)
+						# print(unpacked_data)
 						
 						# if motor0.counter == 100:
 						# 	print(unpacked_data)
@@ -247,106 +248,64 @@ if __name__ == "__main__":
 
 	motor_cpr = 130
 	com_baud = 1000000
-	motor0 = SBMotor('/dev/tty.usbmodem51011901', 0, motor_cpr, com_baud)
-	motor1 = SBMotor('/dev/tty.usbmodem51011901', 1, motor_cpr, com_baud)
-	motor2 = SBMotor('/dev/tty.usbmodem51011901', 2, motor_cpr, com_baud)
-	motor3 = SBMotor('/dev/tty.usbmodem51011901', 3, motor_cpr, com_baud)
-	motor4 = SBMotor('/dev/tty.usbmodem51011901', 4, motor_cpr, com_baud)
-	motor5 = SBMotor('/dev/tty.usbmodem51011901', 5, motor_cpr, com_baud)
-	motor6 = SBMotor('/dev/tty.usbmodem51011901', 6, motor_cpr, com_baud)
-	motor7 = SBMotor('/dev/tty.usbmodem51011901', 7, motor_cpr, com_baud)
-	motor8 = SBMotor('/dev/tty.usbmodem51011901', 8, motor_cpr, com_baud)
-	motor0.set_current(100)
-	motor1.set_current(100)
-	motor2.set_current(100)
+	dynamixel_current = 200
 	curr_pos = 0
 	increment = 5
 	minDynamixel = 135
+	pos_offset = [135, 135, 135, 0, 0, 0, 0, 0, 0]
+
+	gripper = []
+	for ii in range(9):
+		new_motor = SBMotor('/dev/tty.usbmodem51011901', ii, motor_cpr, com_baud)
+		gripper.append(new_motor)
+
+	for ii_d in range(3):
+		gripper[ii_d].set_current(dynamixel_current)
 
 	while True:
-		motor0.move_to_pos(curr_pos + minDynamixel)
-		motor1.move_to_pos(curr_pos + minDynamixel)
-		motor2.move_to_pos(curr_pos + minDynamixel)
-		motor3.move_to_pos(curr_pos)
-		motor4.move_to_pos(curr_pos)
-		motor5.move_to_pos(curr_pos)
-		motor6.move_to_pos(curr_pos)
-		motor7.move_to_pos(curr_pos)
-		motor8.move_to_pos(curr_pos)
-		print(curr_pos)
-		motor0.request_vals()
-		motor0.recv_from_serial()
+		# Send to Serial
+		for m_id in range(9):
+			gripper[m_id].move_to_pos(curr_pos + pos_offset[m_id])
+		# Receive from Serial
+		gripper[0].request_vals()
+		gripper[0].recv_from_serial()
+
+		# Update pos
 		time.sleep(1)
 		curr_pos = curr_pos + increment
-		if curr_pos >= 90 or curr_pos <= 0:
+		if curr_pos >= 45 or curr_pos <= 0:
 			increment = -increment
+
+	# motor0 = SBMotor('/dev/tty.usbmodem51011901', 0, motor_cpr, com_baud)
+	# motor1 = SBMotor('/dev/tty.usbmodem51011901', 1, motor_cpr, com_baud)
+	# motor2 = SBMotor('/dev/tty.usbmodem51011901', 2, motor_cpr, com_baud)
+	# motor3 = SBMotor('/dev/tty.usbmodem51011901', 3, motor_cpr, com_baud)
+	# motor4 = SBMotor('/dev/tty.usbmodem51011901', 4, motor_cpr, com_baud)
+	# motor5 = SBMotor('/dev/tty.usbmodem51011901', 5, motor_cpr, com_baud)
+	# motor6 = SBMotor('/dev/tty.usbmodem51011901', 6, motor_cpr, com_baud)
+	# motor7 = SBMotor('/dev/tty.usbmodem51011901', 7, motor_cpr, com_baud)
+	# motor8 = SBMotor('/dev/tty.usbmodem51011901', 8, motor_cpr, com_baud)
+	# motor0.set_current(100)
+	# motor1.set_current(100)
+	# motor2.set_current(100)
+
+
+	# while True:
+	# 	motor0.move_to_pos(curr_pos + minDynamixel)
+	# 	motor1.move_to_pos(curr_pos + minDynamixel)
+	# 	motor2.move_to_pos(curr_pos + minDynamixel)
+	# 	motor3.move_to_pos(curr_pos)
+	# 	motor4.move_to_pos(curr_pos)
+	# 	motor5.move_to_pos(curr_pos)
+	# 	motor6.move_to_pos(curr_pos)
+	# 	motor7.move_to_pos(curr_pos)
+	# 	motor8.move_to_pos(curr_pos)
+	# 	# print(curr_pos)
+	# 	motor0.request_vals()
+	# 	motor0.recv_from_serial()
+	# 	time.sleep(1)
+	# 	curr_pos = curr_pos + increment
+	# 	if curr_pos >= 45 or curr_pos <= 0:
+	# 		increment = -increment
 		
 
-
-
-	# motor0.move(36000)
-	# motor1.move(36000)
-	# motor2.move(36000)
-	# motor3.move(36000)
-	# start_time = time.time()
-	# while True:
-	# 	motor0.recv_from_serial()
-# print(motor0.counter)
-
-# if motor0.counter > 200:
-# 	cur_time = time.time()
-# 	print(cur_time - start_time)
-# 	start_time = cur_time
-# 	motor0.counter = 0
-
-
-"""
-motor0.set_stop(True)
-motor1.set_stop(True)
-motor2.set_stop(True)
-motor3.set_stop(True)
-
-motor0.set_stop(False)
-motor1.set_stop(False)
-motor2.set_stop(False)
-motor3.set_stop(False)
-
-motor0.move(3600)
-motor1.move(3600)
-motor2.move(3600)
-motor3.move(3600)
-
-motor0.move(-360)
-motor1.move(-360)
-motor2.move(-360)
-motor3.move(-360)
-
-motor0.move_to_pos(36000)
-motor1.move_to_pos(36000)
-motor2.move_to_pos(36000)
-motor3.move_to_pos(36000)
-
-motor0.move_to_pos(0)
-motor1.move_to_pos(0)
-motor2.move_to_pos(0)
-motor3.move_to_pos(0)
-"""
-
-
-
-
-
-	# while True:
-	# 	data = ser.read(1)  # the last bit gets rid of the new-line chars
-	# 	print("%x"%data[0])
-	# 	if data == b'\n':
-	# 		break
-	#
-	# ser.close()
-
-
-
-	
-	
-	
-	
