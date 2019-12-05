@@ -39,7 +39,7 @@ def to_teleoperation():
 	
 def handle_motor_pos(event):
 	global increment
-	global curr_posrtyyyyyyyyttttttttttttttttttttt
+	global curr_pos
 	global current_state
 	global pos_offset
 	# print(keyboard.get_hotkey_name() == "q")
@@ -91,11 +91,27 @@ def handle_motor_pos(event):
 		curr_pos[8] += increment
 	if keyboard.get_hotkey_name() == 'l':
 		curr_pos[8] -= increment
-	if keyboard.get_hotkey_name() == 'p':
+	if keyboard.get_hotkey_name() == 'x':
+		curr_pos[0] += increment
+		curr_pos[1] += increment
+		curr_pos[2] += increment
+	if keyboard.get_hotkey_name() == 'z':
+		curr_pos[0] -= increment
+		curr_pos[1] -= increment
+		curr_pos[2] -= increment
+	if keyboard.get_hotkey_name() == 'v':
+		curr_pos[3] += increment
+		curr_pos[4] += increment
+		curr_pos[5] += increment
+	if keyboard.get_hotkey_name() == 'c':
+		curr_pos[3] -= increment
+		curr_pos[4] -= increment
+		curr_pos[5] -= increment
+	if keyboard.get_hotkey_name() == 'n':
 		curr_pos[6] += increment
 		curr_pos[7] += increment
 		curr_pos[8] += increment
-	if keyboard.get_hotkey_name() == ';':
+	if keyboard.get_hotkey_name() == 'b':
 		curr_pos[6] -= increment
 		curr_pos[7] -= increment
 		curr_pos[8] -= increment
@@ -153,6 +169,6 @@ for ii_d in range(3):
 	gripper[ii_d].set_current(dynamixel_current)
 
 
-keyboard.wait('z')
+keyboard.wait('.')
 
 	
