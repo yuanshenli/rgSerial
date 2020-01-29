@@ -115,6 +115,14 @@ def handle_motor_pos(event):
 		curr_pos[6] -= increment
 		curr_pos[7] -= increment
 		curr_pos[8] -= increment
+	if keyboard.get_hotkey_name() == 'm':
+		curr_pos[6] += 2*increment
+		curr_pos[7] -= increment
+		curr_pos[8] -= increment
+	if keyboard.get_hotkey_name() == ',':
+		curr_pos[6] -= 2*increment
+		curr_pos[7] += increment
+		curr_pos[8] += increment
 	
 	if current_state == 1:
 		# Send to Serial
