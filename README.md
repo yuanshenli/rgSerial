@@ -11,7 +11,9 @@ Low level control, and python API for roller gripper V2.
 
 ### Hardware
 [Dynamixel DYNAMIXEL XM430-W350-T](http://www.robotis.us/dynamixel-xh430-w350-t/)
+
 [Teensy 3.6](http://www.robotis.us/dynamixel-xh430-w350-t/)
+
 [Servocity Micro gear motors](https://www.servocity.com/110-rpm-micro-gear-motor-w-encoder)
 
 ### API example
