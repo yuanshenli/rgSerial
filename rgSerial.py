@@ -16,13 +16,15 @@ class MotorSerial:
 		if MotorSerial.ser is None:
 			# teensyPort = self.getTeensyPort()
 			teensyPort = None
+			print(list_ports.comports())
 			for port in list(list_ports.comports()):
 				if MotorSerial.target_string in port[2]:
 					teensyPort = port[0]
 			if teensyPort is None:
+				print("Automatic serial port connection failed, using custom serial port...")
 				MotorSerial.ser = serial.Serial(serial_port, baud_rate)
 			else:
-				print("Automatic serial port connection failed, using custom serial port...")
+				print("port found:", teensyPort)
 				MotorSerial.ser = serial.Serial(teensyPort, baud_rate)
 			# MotorSerial.ser.open()
 
