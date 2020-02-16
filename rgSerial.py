@@ -179,6 +179,8 @@ class SBMotor:
 		cur_state = 0
 		rx_len = 0
 		idx = 0
+		# ready_to_return = False
+		return_val = None
 
 		while self.ser.in_waiting:
 			# rx = self.ser.read(1)
@@ -223,19 +225,17 @@ class SBMotor:
 						self.recv_buffer = self.msg_unstuff(bytearray(self.recv_buffer))
 
 						unpacked_data = unpack('<BBBBHlffffffffffff', self.recv_buffer)
+						return_val = unpacked_data[6:]
 						# print(unpacked_data)
 						
-						# if motor0.counter == 100:
+						# cur_time = time.time()
+						# if (cur_time - self.time) > 0.05:
 						# 	print(unpacked_data)
-						# 	motor0.counter = 0
-
-						# 	cur_time = time.time()
-						# 	print(cur_time - self.time)
+						# 	# motor0.counter = 0
+						# 	# print(cur_time - self.time)
 						# 	self.time = cur_time
-
 						cur_state = 0
 						self.counter += 1
-
 
 				last_state = 2
 			if cur_state == 3:
@@ -243,6 +243,8 @@ class SBMotor:
 				# 	print("read error")
 				last_state = cur_state
 				cur_state = 0
+		return return_val
+
 
 if __name__ == "__main__":
 
@@ -266,12 +268,14 @@ if __name__ == "__main__":
 		# Send to Serial
 		for m_id in range(9):
 			gripper[m_id].move_to_pos(curr_pos + pos_offset[m_id])
+		print(curr_pos)
 		# Receive from Serial
 		gripper[0].request_vals()
-		gripper[0].recv_from_serial()
+		sensor_val = gripper[0].recv_from_serial()
+		# print()
 
 		# Update pos
-		time.sleep(1)
+		time.sleep(0.05)
 		curr_pos = curr_pos + increment
 		if curr_pos >= 45 or curr_pos <= 0:
 			increment = -increment

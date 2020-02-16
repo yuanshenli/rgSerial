@@ -135,17 +135,17 @@ def handle_motor_pos(event):
 			gripper[m_id].move_to_pos(curr_pos[m_id] + pos_offset[m_id])
 			# Receive from Serial
 		
-		gripper[0].request_vals()
-		sensor_val = gripper[0].recv_from_serial()
+		# gripper[0].request_vals()
+		# sensor_val = gripper[0].recv_from_serial()
 
-		if sensor_val != None:
-			base0 = sensor_val[0] - pos_offset[0]
-			base1 = sensor_val[1] - pos_offset[1]
-			base2 = sensor_val[2] - pos_offset[2]
-			print([base0, base1, base2])
-		else:
-			print("sensor_val = None")
-		time.sleep(0.05)
+		# if sensor_val != None:
+		# 	base0 = sensor_val[0] - pos_offset[0]
+		# 	base1 = sensor_val[1] - pos_offset[1]
+		# 	base2 = sensor_val[2] - pos_offset[2]
+		# 	print([base0, base1, base2])
+		# else:
+		# 	print("sensor_val = None")
+
 	# change calibration
 	if keyboard.get_hotkey_name() == '=':
 		pos_offset[cal_motor] += 1
