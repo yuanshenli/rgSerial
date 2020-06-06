@@ -3,7 +3,7 @@ rgSerial
 
 ### Description
 
-Low level control, and python API for roller gripper V2.
+Low level control, and python API for [roller gripper V2](https://yuanshenli.com/roller_grasper_v2.html).
 - current based position control for dynamixels, 
 - PD contoller for pivot and roller motors
 - Tested on macOS Catalina, Ubuntu 16.0.4
